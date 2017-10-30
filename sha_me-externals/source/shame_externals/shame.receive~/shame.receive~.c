@@ -288,31 +288,31 @@ t_max_err shame_receive_tilde_nchannels_set(t_shame_receive_tilde *x, void *attr
 
 void shame_receive_tilde_refresh(t_shame_receive_tilde *x)
 {
-	int init_error;
+	int init_result;
 	
 //	x->shame_readable = false;
 	if (!x->reader_initialized) {
-		init_error = init_shame_reader(&x->shame_read, x->name.s_name, &x->reader_n, sys_getsr(), sys_getblksize());
+		init_result = init_shame_reader(&x->shame_read, x->name.s_name, &x->reader_n, sys_getsr(), sys_getblksize());
 		
-		switch (init_error) {
-			case 0:
+		switch (init_result) {
+			case E_SHAME_INIT_READER_SUCCESS:
 				object_post((t_object *)x, "Connected to %s", x->name.s_name);
 				break;
-			case -1:
+			case E_SHAME_DOESNT_EXIST:
 				object_post((t_object *)x, "No writer found whith name '%s'. Refresh object after writer's creation", x->name);
 				return;
-			case -2:
-				object_error((t_object *)x, "Map failed for %s (error %d)", x->name.s_name, init_error);
+			case E_SHAME_MAP_FAILED:
+				object_error((t_object *)x, "Map failed for %s (error %d)", x->name.s_name, init_result);
 				return;
-			case -3:
-				object_error((t_object *)x, "Unmap failed for %s (error %d)", x->name.s_name, init_error);
+			case E_SHAME_REMAP_FAILED_UNMAP:
+				object_error((t_object *)x, "Unmap failed for %s (error %d)", x->name.s_name, init_result);
 				return;
-			case -4:
-				object_error((t_object *)x, "Remap failed for %s (error %d)", x->name.s_name, init_error);
+			case E_SHAME_REMAP_FAILED_MAP:
+				object_error((t_object *)x, "Remap failed for %s (error %d)", x->name.s_name, init_result);
 				return;
 		}
 		
-		x->reader_initialized = (!init_error);
+		x->reader_initialized = (init_result == E_SHAME_INIT_READER_SUCCESS);
 	}
 	
 	if (x->reader_initialized)
