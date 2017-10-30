@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="chLW6F" name="ShaMe_send" displaySplashScreen="1" reportAppUsage="1"
+              splashScreenColour="Dark" projectType="audioplug" version="1.0.0"
+              bundleIdentifier="com.ortegabrook.ShaMe_send" includeBinaryInAppConfig="1"
+              cppLanguageStandard="11" buildVST="1" buildVST3="1" buildAU="1"
+              buildAUv3="1" buildRTAS="0" buildAAX="1" buildStandalone="0"
+              enableIAA="0" pluginName="ShaMe send" pluginDesc="ShaMe send"
+              pluginManufacturer="ortegabrook" pluginManufacturerCode="Manu"
+              pluginCode="Chlw" pluginChannelConfigs="" pluginIsSynth="0" pluginWantsMidiIn="0"
+              pluginProducesMidiOut="0" pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0"
+              pluginAUExportPrefix="ShaMe_sendAU" pluginRTASCategory="" aaxIdentifier="com.ortegabrook.ShaMe_send"
+              pluginAAXCategory="AAX_ePlugInCategory_Other" jucerVersion="5.2.0"
+              companyCopyright="">
+  <MAINGROUP id="erLsxm" name="ShaMe_send">
+    <GROUP id="{0DE5174B-8DEC-DB5E-C08D-DEA65E90507E}" name="Source">
+      <GROUP id="{3E022FE3-F030-0FE0-CA44-353F75EA0869}" name="sha_me">
+        <FILE id="Lvwr9x" name="shame.c" compile="1" resource="0" file="../../C_sources/sha_me/shame.c"/>
+        <FILE id="M2kodk" name="shame.h" compile="0" resource="0" file="../../C_sources/sha_me/shame.h"/>
+      </GROUP>
+      <GROUP id="{B737E198-8FA1-D596-0B71-C89532612A25}" name="Res">
+        <FILE id="N6m3Bs" name="shame_strings.h" compile="0" resource="0" file="Source/shame_strings.h"/>
+        <FILE id="nwR9Xb" name="ShaMeColours.h" compile="0" resource="0" file="Source/ShaMeColours.h"/>
+        <FILE id="Wrwx27" name="ShaMeLookAndFeel.h" compile="0" resource="0"
+              file="Source/ShaMeLookAndFeel.h"/>
+      </GROUP>
+      <GROUP id="{EBF94E97-3F0D-5017-4757-5F68AA4389B4}" name="Components">
+        <FILE id="wZlxtf" name="BarComponent.cpp" compile="1" resource="0"
+              file="Source/BarComponent.cpp"/>
+        <FILE id="zwT45I" name="BarComponent.h" compile="0" resource="0" file="Source/BarComponent.h"/>
+        <FILE id="rmwUS3" name="ConsoleComponent.cpp" compile="1" resource="0"
+              file="Source/ConsoleComponent.cpp"/>
+        <FILE id="cjaxGv" name="ConsoleComponent.h" compile="0" resource="0"
+              file="Source/ConsoleComponent.h"/>
+        <FILE id="PndkXE" name="LedComponent.cpp" compile="1" resource="0"
+              file="Source/LedComponent.cpp"/>
+        <FILE id="yKTXjK" name="LedComponent.h" compile="0" resource="0" file="Source/LedComponent.h"/>
+        <FILE id="UiQkHw" name="TitleComponent.cpp" compile="1" resource="0"
+              file="Source/TitleComponent.cpp"/>
+        <FILE id="b48OCo" name="TitleComponent.h" compile="0" resource="0"
+              file="Source/TitleComponent.h"/>
+      </GROUP>
+      <FILE id="sD0LEL" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="vANwx6" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="J6zlnx" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="Naegm6" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="ShaMe_send"
+                       enablePluginBinaryCopyStep="1"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="ShaMe_send"
+                       enablePluginBinaryCopyStep="1"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_QUICKTIME="disabled"/>
+</JUCERPROJECT>
