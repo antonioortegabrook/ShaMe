@@ -40,8 +40,10 @@
 				22CF119A0EE9A8250054F513 /* shame.receive~.c */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 			);
+			indentWidth = 8;
 			name = iterator;
 			sourceTree = "<group>";
+			tabWidth = 8;
 			usesTabs = 1;
 		};
 		19C28FB4FE9D528D11CA2CBB /* Products */ = {
