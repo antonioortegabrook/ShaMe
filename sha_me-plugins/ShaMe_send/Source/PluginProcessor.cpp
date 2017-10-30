@@ -12,7 +12,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//#include "../../../C_sources/sha_me/shame.c"
+#include "../../../sha_me-common/shame.c"
 
 
 //==============================================================================
@@ -267,12 +267,12 @@ void ShaMe_sendAudioProcessor::createShaMe(juce::String name)
 	if (binStatus > S_UNINITIALIZED) {
 		
 		// do nothing if it's initialized
-//		if (!name.compare(shameName) && binStatus > S_CANT_READ) {
+		//		if (!name.compare(shameName) && binStatus > S_CANT_READ) {
 		if (!name.compare(shameName) && binStatus > S_CANT_WRITE) {
 			binStatus = get_writer_status(shame_write, writerN);
 			return;
 		}
-
+		
 		
 		sprintf(formattedName, "%s", shameName.toStdString().c_str());
 		
@@ -301,7 +301,7 @@ void ShaMe_sendAudioProcessor::createShaMe(juce::String name)
 	binStatus = get_writer_status(shame_write, writerN);
 	
 	isWritable = binStatus > S_CANT_WRITE;
-	
+
 	initResult = init_err;
 }
 

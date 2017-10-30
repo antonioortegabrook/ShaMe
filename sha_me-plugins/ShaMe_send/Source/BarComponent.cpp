@@ -51,6 +51,7 @@ BarComponent::BarComponent()
 
 BarComponent::~BarComponent()
 {
+    setLookAndFeel(nullptr);    // <-revisar
 }
 
 void BarComponent::paint (Graphics& g)
