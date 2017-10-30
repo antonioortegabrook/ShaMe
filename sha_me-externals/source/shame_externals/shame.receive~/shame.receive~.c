@@ -40,7 +40,7 @@ void shame_receive_tilde_perform64_no_out(t_shame_receive_tilde *x, t_object *ds
 
 
 void shame_receive_tilde_refresh(t_shame_receive_tilde *x);
-void set_readable(t_shame_receive_tilde *x);
+void set_readable(t_shame_receive_tilde *x, int be_verbose);
 
 //attr accessors
 t_max_err shame_receive_tilde_name_get(t_shame_receive_tilde *x, void *attr, long *ac, t_atom **av);
@@ -97,6 +97,7 @@ void *shame_receive_tilde_new(t_symbol *s, long argc, t_atom *argv)
 	x->instantiated		= false;
 	x->reader_initialized	= false;
 	x->nchannels		= 1;
+	x->name			= *gensym("");
 	
 	attr_args_process(x, argc, argv);
 	
@@ -106,11 +107,6 @@ void *shame_receive_tilde_new(t_symbol *s, long argc, t_atom *argv)
 		outlet_new((t_pxobject *)x, "signal"); 		// signal outlet (note "signal" rather than NULL)
 	
 	
-	if (!x->name.s_name) {
-		x->name = *gensym("shame0");
-		shame_receive_tilde_refresh(x);
-	}
-	
 	x->instantiated = true;
 	
 	return (x);
@@ -119,21 +115,23 @@ void *shame_receive_tilde_new(t_symbol *s, long argc, t_atom *argv)
 
 void shame_receive_tilde_free(t_shame_receive_tilde *x)
 {
-	int dettach_error;
+	int dettach_result;
 	
 	dsp_free((t_pxobject *)x);
 	
-	dettach_error = dettach_shame(x->shame_read, x->name.s_name, x->reader_n,true);
+	dettach_result = dettach_shame(x->shame_read, x->name.s_name, x->reader_n,true);
 	
-	switch (dettach_error) {
-		case -1:
-			object_error((t_object *)x, "Unmap failed for '%s' (error %d)", x->name.s_name, dettach_error);
+	switch (dettach_result) {
+		case E_SHAME_UNMAP_FAILED:
+			object_error((t_object *)x, "Unmap failed for '%s'", x->name.s_name);
 			break;
-		case -2:
-			object_error((t_object *)x, "No file to unlink for '%s' (error %d)", x->name.s_name, dettach_error);
+			
+		case E_SHAME_NO_FILE_TO_UNLINK:
+			object_error((t_object *)x, "No file to unlink for '%s'", x->name.s_name);
 			break;
-		case -3:
-			object_error((t_object *)x, "Unlink failed for '%s' (error %d)", x->name.s_name, dettach_error);
+			
+		case E_SHAME_UNLINK_FAILED:
+			object_error((t_object *)x, "Unlink failed for '%s'", x->name.s_name);
 			break;
 	}
 }
@@ -170,12 +168,10 @@ void shame_receive_tilde_dsp64(t_shame_receive_tilde *x, t_object *dsp64, short 
 	// 6: a generic pointer that you can use to pass any additional data to your perform method
 	
 	if (x->reader_initialized)
-		set_readable(x);
+		set_readable(x, false);
 	
-//	if (x->shame_readable)
-		object_method(dsp64, gensym("dsp_add64"), x, shame_receive_tilde_perform64, 0, NULL);
-//	else
-//		object_method(dsp64, gensym("dsp_add64"), x, shame_receive_tilde_perform64_no_out, 0, NULL);
+
+	object_method(dsp64, gensym("dsp_add64"), x, shame_receive_tilde_perform64, 0, NULL);
 }
 
 
@@ -243,13 +239,13 @@ void shame_receive_tilde_perform64_no_out(t_shame_receive_tilde *x, t_object *ds
 
 t_max_err shame_receive_tilde_name_set(t_shame_receive_tilde *x, void *attr, long *argc, t_atom *argv)
 {
-	int dettach_error;
+	int dettach_result;
 	
 	if (x->reader_initialized) {
 		x->shame_readable = false;
-		dettach_error = dettach_shame(x->shame_read, x->name.s_name, x->reader_n,true);
+		dettach_result = dettach_shame(x->shame_read, x->name.s_name, x->reader_n,true);
 		
-		if (dettach_error)
+		if (dettach_result != E_SHAME_DETTACH_SUCCESS)
 			return MAX_ERR_GENERIC;
 		
 		x->reader_initialized = false;
@@ -257,7 +253,8 @@ t_max_err shame_receive_tilde_name_set(t_shame_receive_tilde *x, void *attr, lon
 	
 	x->name = *atom_getsym(argv);
 	
-	shame_receive_tilde_refresh(x);
+	if (strcmp(x->name.s_name, ""))
+		shame_receive_tilde_refresh(x);
 	
 	return MAX_ERR_NONE;
 }
@@ -298,31 +295,35 @@ void shame_receive_tilde_refresh(t_shame_receive_tilde *x)
 			case E_SHAME_INIT_READER_SUCCESS:
 				object_post((t_object *)x, "Connected to %s", x->name.s_name);
 				break;
+				
 			case E_SHAME_DOESNT_EXIST:
 				object_post((t_object *)x, "No writer found whith name '%s'. Refresh object after writer's creation", x->name);
-				return;
+				break;
+				
 			case E_SHAME_MAP_FAILED:
 				object_error((t_object *)x, "Map failed for %s (error %d)", x->name.s_name, init_result);
-				return;
+				break;
+				
 			case E_SHAME_REMAP_FAILED_UNMAP:
 				object_error((t_object *)x, "Unmap failed for %s (error %d)", x->name.s_name, init_result);
-				return;
+				break;
+				
 			case E_SHAME_REMAP_FAILED_MAP:
 				object_error((t_object *)x, "Remap failed for %s (error %d)", x->name.s_name, init_result);
-				return;
+				break;
 		}
 		
 		x->reader_initialized = (init_result == E_SHAME_INIT_READER_SUCCESS);
 	}
 	
 	if (x->reader_initialized)
-		set_readable(x);
+		set_readable(x, true);
 }
 
 
 
 
-void set_readable(t_shame_receive_tilde *x)
+void set_readable(t_shame_receive_tilde *x, int be_verbose)
 {
 	int previous_state = x->shame_readable;
 	
@@ -334,7 +335,7 @@ void set_readable(t_shame_receive_tilde *x)
 		
 		match_sample_rate = false;
 		
-		if (match_sample_rate != previous_state)
+		if (match_sample_rate != previous_state || be_verbose)
 			object_warn((t_object *)x, "%s doesn't match sample rate", x->name.s_name);
 		
 	} else
@@ -346,7 +347,7 @@ void set_readable(t_shame_receive_tilde *x)
 		
 		match_vector_size = false;
 		
-		if (match_vector_size != previous_state)
+		if (match_vector_size != previous_state || be_verbose)
 			object_warn((t_object *)x, "%s doesn't match vector size", x->name.s_name);
 		
 	} else
@@ -355,6 +356,6 @@ void set_readable(t_shame_receive_tilde *x)
 	
 	x->shame_readable = (match_sample_rate && match_vector_size);
 	
-	if (x->shame_readable && !previous_state)
+	if (x->shame_readable && (!previous_state || be_verbose))
 		object_post((t_object *)x, "%s is readable", x->name.s_name);
 }
