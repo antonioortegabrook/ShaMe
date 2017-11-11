@@ -111,7 +111,7 @@ void ShaMe_sendAudioProcessorEditor::buttonClicked (Button* button)
 {
 	if (button == &bar.refreshButton) {
 		/** Refresh hace lo mismo que create, pero toma el nombre del processor en lugar del nameField,
-		    pero sólo si el writer está inicializado.
+		    sólo si el writer está inicializado.
 		 */
 		if (processor.binStatus == S_UNINITIALIZED) {
 			console.postMessage(String("Writer not initialized"));

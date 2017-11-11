@@ -337,8 +337,9 @@ void ShaMe_sendAudioProcessor::forceUnlink()
 	
 	force_unlink(formattedName);
 	
+	binStatus = S_UNINITIALIZED;
 	shameName.operator=(juce::String());
-//	isWritable = false;
+	isWritable = false;
 }
 
 int ShaMe_sendAudioProcessor::readersMatchSampleRate()
