@@ -145,7 +145,6 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
 	int reader_i;
 	int fd_shm;
 	struct shame *tmp_shared_mem;
-	int should_remap = true;
 	pid_t our_pid = getpid();
 	
 	size_t map_size;
@@ -169,33 +168,27 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
 	// Successfully mapped
 	// Find the first empty position in PIDs array; this will be our instance index
 	reader_i = 0;
-	while (tmp_shared_mem->reader_pid[reader_i] != EMPTY) {
-		
-		// Check if we should remap (if our process has already mapped, we don't do it again)
-//		if (tmp_shared_mem->reader_pid[reader_i] == our_pid)
-//			should_remap = false;
-		
+	while (tmp_shared_mem->reader_pid[reader_i] != EMPTY)
 		reader_i++;
-	}
-	// (now reader_i = first empty position)
+
+	// now reader_i == first empty position
 	
 	
-	
-	if (should_remap) {
-		// Get total size
-		map_size = tmp_shared_mem->map_size;
+	// Remap
+	// Get total size
+	map_size = tmp_shared_mem->map_size;
 		
-		// Unmap...
-		if (munmap(tmp_shared_mem, sizeof(struct shame)) == -1)
-			return E_SHAME_REMAP_FAILED_UNMAP;	// Unmap failed
+	// Unmap...
+	if (munmap(tmp_shared_mem, sizeof(struct shame)) == -1)
+		return E_SHAME_REMAP_FAILED_UNMAP;	// Unmap failed
 		
-		// ...and remap
-		tmp_shared_mem = (struct shame *)mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
+	// ...and remap
+	tmp_shared_mem = (struct shame *)mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
 		
-		if (tmp_shared_mem == MAP_FAILED)
-			return E_SHAME_REMAP_FAILED_MAP;	// Remap failed
+	if (tmp_shared_mem == MAP_FAILED)
+		return E_SHAME_REMAP_FAILED_MAP;	// Remap failed
 		
-	}
+
 	
 	
 	// Fill
