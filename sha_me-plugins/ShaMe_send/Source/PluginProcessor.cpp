@@ -342,6 +342,21 @@ void ShaMe_sendAudioProcessor::forceUnlink()
 	isWritable = false;
 }
 
+int ShaMe_sendAudioProcessor::readersAttached()
+{
+	int readers = readers_attached(shame_write);
+	binStatus = get_writer_status(shame_write, writerN);
+	
+	return readers;
+}
+int ShaMe_sendAudioProcessor::writersAttached()
+{
+	int writers = writers_attached(shame_write);
+	binStatus = get_writer_status(shame_write, writerN);
+	
+	return writers;
+}
+
 int ShaMe_sendAudioProcessor::readersMatchSampleRate()
 {
 	int match = clients_match_sample_rate(shame_write);

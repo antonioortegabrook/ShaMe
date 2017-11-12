@@ -190,8 +190,8 @@ void ShaMe_sendAudioProcessorEditor::postStatus()
 	if (processor.binStatus > S_CANT_READ) {
 		int	vs	= processor.shame_write->vector_size;
 		double	sr	= processor.shame_write->sample_rate;
-		int attachedR	= processor.shame_write->attached_readers;
-		int attachedW	= processor.shame_write->attached_writers;
+		int attachedR	= processor.readersAttached();
+		int attachedW	= processor.writersAttached();
 		int dontMatchSR = processor.shame_write->attached_readers - processor.readersMatchSampleRate();
 		int dontMatchVS = processor.shame_write->attached_readers - processor.readersMatchVectorSize();
 		

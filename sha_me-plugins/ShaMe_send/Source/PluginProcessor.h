@@ -68,6 +68,8 @@ public:
 	void createShaMe(juce::String name);
 	void dettachShameWriter();
 	void forceUnlink();
+	int readersAttached();
+	int writersAttached();
 	int readersMatchSampleRate();
 	int readersMatchVectorSize();
 
