@@ -302,7 +302,7 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 	
 	/** If there are no more readers or writers attached to this shame, we should also unlink
 	 */
-	should_unlink   = (!tmp_shared_mem->attached_readers && !tmp_shared_mem->attached_writers);
+	should_unlink = (!readers_attached(tmp_shared_mem) && !writers_attached(tmp_shared_mem));
 	
 	
 	if (should_unmap) {
@@ -320,7 +320,7 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 			return E_SHAME_NO_FILE_TO_UNLINK;	// No file to unlink
 		
 		if (shm_unlink(formatted_name) == -1)
-			return E_SHAME_UNLINK_FAILED;	// Unlink failed
+			return E_SHAME_UNLINK_FAILED;		// Unlink failed
 	}
 	
 	return E_SHAME_DETTACH_SUCCESS;
@@ -348,6 +348,7 @@ int writers_attached(struct shame *shared_mem)
 	
 	/** Acá es donde deberíamos checkear que efectivamente estén activos
 	 */
+	update_active_connections(shared_mem, false);
 	
 	writers = shared_mem->attached_writers;
 	
@@ -364,6 +365,7 @@ int readers_attached(struct shame *shared_mem)
 	
 	/** Acá es donde deberíamos checkear que efectivamente estén activos
 	 */
+	update_active_connections(shared_mem, true);
 	
 	readers = shared_mem->attached_readers;
 	
@@ -419,7 +421,6 @@ int clients_match_vector_size(struct shame *shared_mem)
 }
 
 
-
 /** Get writer's binary status.
  */
 int get_writer_status(struct shame *shared_mem, int writer_id)
@@ -461,4 +462,55 @@ int get_writer_status(struct shame *shared_mem, int writer_id)
 	bin_status |= F_ALL_READERS_CAN_READ;
 	
 	return bin_status;
+}
+
+
+/** Update active readers / writers
+ */
+void update_active_connections(struct shame *shared_mem, int is_reader)
+{
+	int fd_lock;
+	int lock_rc;
+	char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
+	
+	int count = 0;
+	int idx = 0;
+	
+	pid_t our_pid = getpid();
+	
+	if (is_reader) {
+		while (count < shared_mem->attached_readers) {
+			if (shared_mem->reader_pid[idx] && shared_mem->reader_pid[idx] != our_pid) {
+				sprintf(fl_name, "/tmp/shame%d", shared_mem->reader_pid[idx]);
+				
+				fd_lock = open(fl_name, O_RDWR, 0666);
+				lock_rc = lockf(fd_lock, F_TEST, 0);
+				
+				if (!lock_rc) {	// success means file is not locked (process has crashed)
+					shared_mem->reader_pid[idx] = 0;
+					shared_mem->attached_readers -= 1;
+				}
+				
+				count++;
+			}
+			idx++;
+		}
+	} else {
+		while (count < shared_mem->attached_writers) {
+			if (shared_mem->writer_pid[idx] && shared_mem->writer_pid[idx] != our_pid) {
+				sprintf(fl_name, "/tmp/shame%d", shared_mem->writer_pid[idx]);
+				
+				fd_lock = open(fl_name, O_RDWR, 0666);
+				lock_rc = lockf(fd_lock, F_TEST, 0);
+				
+				if (!lock_rc) {	// success means file is not locked (process has crashed)
+					shared_mem->writer_pid[idx] = 0;
+					shared_mem->attached_writers -= 1;
+				}
+				
+				count++;
+			}
+			idx++;
+		}
+	}
 }

@@ -214,4 +214,9 @@ int clients_match_vector_size(struct shame *shared_mem);
 int get_writer_status(struct shame *shared_mem, int writer_id);
 
 
+/** Update active readers / writers
+ */
+void update_active_connections(struct shame *shared_mem, int is_reader);
+
+
 #endif /* shame_h */
