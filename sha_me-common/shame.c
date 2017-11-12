@@ -21,11 +21,17 @@
  */
 t_shame_error init_shame_writer(struct shame **shared_mem, char name[], int *writer_number, int sample_rate, int vector_size, long nchannels)
 {
+	int fd_lock;
+	int lock_rc;
+	char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
+	
         int writer_i;
         int fd_shm;
         int truncate_err;
         struct shame *tmp_shared_mem;
-        
+	
+	pid_t writer_pid		= getpid();
+	
         size_t file_size		= MULT_PAGESIZE * getpagesize();
         size_t fixed_size		= sizeof(struct shame) - sizeof(double);
         size_t sample_data_size		= 2 * sizeof(double) * vector_size * nchannels;
@@ -35,16 +41,25 @@ t_shame_error init_shame_writer(struct shame **shared_mem, char name[], int *wri
 	t_shame_error return_value;
         
         char formatted_name[256];
-        sprintf(formatted_name, "/%s", name);
-        
-        // Check args
-        if (fixed_size + sample_data_size > file_size)
-                return E_SHAME_TOO_MUCH_DATA_TO_WRITE;
-        
-        // Open file without creating
-        fd_shm = shm_open(formatted_name, O_RDWR, 0660);
-        
-        
+	
+	
+	// Set a file-lock to let other processes know if we are active or not
+	sprintf(fl_name, "/tmp/shame%d", writer_pid);
+	
+	fd_lock = open(fl_name, O_CREAT | O_RDWR, 0666);
+	lock_rc = lockf(fd_lock, F_TLOCK, 0);
+	
+	// Check args
+	if (fixed_size + sample_data_size > file_size)
+		return E_SHAME_TOO_MUCH_DATA_TO_WRITE;
+	
+	
+	// Open file without creating
+	sprintf(formatted_name, "/%s", name);
+	
+	fd_shm = shm_open(formatted_name, O_RDWR, 0660);
+	
+	
         /** If the file already exists, we open it so we can read metadata
          */
         if (fd_shm != -1) {	// File already exists
@@ -142,6 +157,10 @@ label_return:
  */
 int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number, int sample_rate, int vector_size)
 {
+	int fd_lock;
+	int lock_rc;
+	char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
+	
 	int reader_i;
 	int fd_shm;
 	struct shame *tmp_shared_mem;
@@ -151,9 +170,18 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
 	
 	char formatted_name[256];
 	
-	sprintf(formatted_name, "/%s", name);
+	
+	// Set a file-lock to let other processes know if we are active or not
+	sprintf(fl_name, "/tmp/shame%d", our_pid);
+	
+	fd_lock = open(fl_name, O_CREAT | O_RDWR, 0666);
+	lock_rc = lockf(fd_lock, F_TLOCK, 0);
+	
+	
 	
 	// Get shared memory
+	sprintf(formatted_name, "/%s", name);
+	
 	if ((fd_shm = shm_open(formatted_name, O_RDWR, 0660)) == -1)
 		return E_SHAME_DOESNT_EXIST;	// File doesn't exist
 	
@@ -170,38 +198,38 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
 	reader_i = 0;
 	while (tmp_shared_mem->reader_pid[reader_i] != EMPTY)
 		reader_i++;
-
+	
 	// now reader_i == first empty position
 	
 	
 	// Remap
 	// Get total size
 	map_size = tmp_shared_mem->map_size;
-		
+	
 	// Unmap...
 	if (munmap(tmp_shared_mem, sizeof(struct shame)) == -1)
 		return E_SHAME_REMAP_FAILED_UNMAP;	// Unmap failed
-		
+	
 	// ...and remap
 	tmp_shared_mem = (struct shame *)mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
-		
+	
 	if (tmp_shared_mem == MAP_FAILED)
 		return E_SHAME_REMAP_FAILED_MAP;	// Remap failed
-		
-
+	
+	
 	
 	
 	// Fill
 	tmp_shared_mem->reader_sample_rate[reader_i]	= sample_rate;
 	tmp_shared_mem->reader_vector_size[reader_i]	= vector_size;
 	tmp_shared_mem->reader_pid[reader_i]		= our_pid;
-
+	
 	tmp_shared_mem->attached_readers += 1;
 	
 	
 	// Return
 	*shared_mem = tmp_shared_mem;
-        *reader_number = reader_i;
+	*reader_number = reader_i;
 	
 	return E_SHAME_INIT_READER_SUCCESS;
 }
@@ -212,7 +240,7 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
  */
 int dettach_shame(struct shame *shared_mem, char name[], int instance_number, int is_reader)
 {
-        int should_unmap = false;
+	int should_unmap = false;
 	int should_unlink;
 	int instance_i, aux_i, pid_count;
 	struct shame *tmp_shared_mem = shared_mem;
@@ -221,10 +249,10 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 	
 	char formatted_name[256];
 	sprintf(formatted_name, "/%s", name);
-        
-        
-        if (shm_open(formatted_name, O_RDWR, 0660) == -1)
-                return 0;	// File doesn't exist
+	
+	
+	if (shm_open(formatted_name, O_RDWR, 0660) == -1)
+		return 0;	// File doesn't exist
 	
 	
 	
@@ -250,11 +278,11 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 		should_unmap = (pid_count <= 1);
 		tmp_shared_mem->reader_pid[instance_number] = 0;
 		tmp_shared_mem->attached_readers -= 1;
-	
+		
 	} else { // (is writer)
-                if (instance_number == tmp_shared_mem->owner_id) // <- set all samples to 0
-                        memset(&tmp_shared_mem->sample_data, 0, tmp_shared_mem->sample_data_size);
-                
+		if (instance_number == tmp_shared_mem->owner_id) // <- set all samples to 0
+			memset(&tmp_shared_mem->sample_data, 0, tmp_shared_mem->sample_data_size);
+		
 		while (instance_i < tmp_shared_mem->attached_writers) {
 			
 			if (tmp_shared_mem->writer_pid[aux_i]) {
@@ -274,20 +302,20 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 	
 	/** If there are no more readers or writers attached to this shame, we should also unlink
 	 */
-        should_unlink   = (!tmp_shared_mem->attached_readers && !tmp_shared_mem->attached_writers);
+	should_unlink   = (!tmp_shared_mem->attached_readers && !tmp_shared_mem->attached_writers);
 	
 	
-        if (should_unmap) {
+	if (should_unmap) {
 		
 		map_size = tmp_shared_mem->map_size;
 		
-                if (munmap(tmp_shared_mem, map_size) == -1)
-                        return E_SHAME_UNMAP_FAILED;
-        }
+		if (munmap(tmp_shared_mem, map_size) == -1)
+			return E_SHAME_UNMAP_FAILED;
+	}
 	
 	
 	if (should_unlink) {
-
+		
 		if (shm_open(formatted_name, O_RDWR, 0660) == -1)
 			return E_SHAME_NO_FILE_TO_UNLINK;	// No file to unlink
 		
@@ -396,41 +424,41 @@ int clients_match_vector_size(struct shame *shared_mem)
  */
 int get_writer_status(struct shame *shared_mem, int writer_id)
 {
-        int match_sr;
-        int match_vs;
-        int bin_status = S_UNINITIALIZED;
-        
-        
-        bin_status |= F_INITIALIZED;
-        if (!shared_mem)
-                return bin_status;
-        
-        
-        bin_status |= F_CAN_READ;
-        if (shared_mem->owner_id != writer_id)
-                return bin_status;
-        
-        
-        bin_status |= F_CAN_WRITE;
-        if (!shared_mem->attached_readers)
-                return bin_status;
-        
-        
-        match_sr = clients_match_sample_rate(shared_mem);
-        match_vs = clients_match_vector_size(shared_mem);
-        
-        
-        bin_status |= F_READERS_ATTACHED;
-        if (!match_vs || !match_sr)
-                return bin_status;
-        
-        
-        bin_status |= F_SOME_READERS_CAN_READ;
-        if (match_vs < shared_mem->attached_readers || match_sr < shared_mem->attached_readers)
-                return bin_status;
-        
-        
-        bin_status |= F_ALL_READERS_CAN_READ;
-        
-        return bin_status;
+	int match_sr;
+	int match_vs;
+	int bin_status = S_UNINITIALIZED;
+	
+	
+	bin_status |= F_INITIALIZED;
+	if (!shared_mem)
+		return bin_status;
+	
+	
+	bin_status |= F_CAN_READ;
+	if (shared_mem->owner_id != writer_id)
+		return bin_status;
+	
+	
+	bin_status |= F_CAN_WRITE;
+	if (!shared_mem->attached_readers)
+		return bin_status;
+	
+	
+	match_sr = clients_match_sample_rate(shared_mem);
+	match_vs = clients_match_vector_size(shared_mem);
+	
+	
+	bin_status |= F_READERS_ATTACHED;
+	if (!match_vs || !match_sr)
+		return bin_status;
+	
+	
+	bin_status |= F_SOME_READERS_CAN_READ;
+	if (match_vs < shared_mem->attached_readers || match_sr < shared_mem->attached_readers)
+		return bin_status;
+	
+	
+	bin_status |= F_ALL_READERS_CAN_READ;
+	
+	return bin_status;
 }
