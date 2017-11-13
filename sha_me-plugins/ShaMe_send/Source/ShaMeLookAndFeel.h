@@ -43,9 +43,9 @@ public:
 	
 	void drawButtonText (Graphics& g, TextButton& button, bool isMouseOverButton, bool isButtonDown) override
 	{
-//		Font font (getTextButtonFont (button, button.getHeight()));
+		//		Font font (getTextButtonFont (button, button.getHeight()));
 		Font font ("Helvetica", button.getHeight(), Font::plain);
-//		g.setFont (font);
+		//		g.setFont (font);
 		g.setFont(Font("Helvetica", 11.4, Font::plain));
 		g.setColour (button.findColour (button.getToggleState() ? TextButton::textColourOnId
 						: TextButton::textColourOffId)
@@ -64,6 +64,42 @@ public:
 					  leftIndent, yIndent, textWidth, button.getHeight() - yIndent * 2 + 2,
 					  Justification::centred, 2);
 			}
+	
+	
+	
+	/** Checkbox
+	 */
+	void drawTickBox (Graphics &g, Component &c, float x, float y, float w, float h, bool ticked, bool isEnabled, bool isMouseOverButton, bool isButtonDown) override
+	{
+		Rectangle<float> buttonArea (x, y, w, h);
+		
+		if (ticked) {
+			g.setColour(Colour(BORDER_COLOUR_2));
+			g.fillRoundedRectangle(buttonArea,      2);
+			
+			buttonArea = buttonArea.reduced(2);
+			
+			g.setColour(Colour(BACKGROUND_COLOUR));
+			
+			g.drawLine(buttonArea.getX(),
+				   buttonArea.getHeight() / 2 + buttonArea.getY(),
+				   buttonArea.getWidth() / 2 + buttonArea.getX(),
+				   buttonArea.getHeight() + buttonArea.getY(),		2);
+			
+			g.drawLine(buttonArea.getWidth() / 2 + buttonArea.getX(),
+				   buttonArea.getHeight() + buttonArea.getY(),
+				   buttonArea.getWidth() + buttonArea.getX(),
+				   buttonArea.getY(),					2);
+		}
+		else {
+			g.setColour(Colour(BACKGROUND_COLOUR));
+			g.fillRoundedRectangle(buttonArea,      2);
+			
+			g.setColour(Colour(BORDER_COLOUR_2));
+			g.drawRoundedRectangle(buttonArea,      2,   2);
+		}
+		
+	}
 	
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ShaMeLookAndFeel)

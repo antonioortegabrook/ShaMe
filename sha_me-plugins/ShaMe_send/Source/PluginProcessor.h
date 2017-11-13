@@ -77,7 +77,7 @@ public:
 	struct		shame *shame_write;
         int             binStatus;
         int             initResult;
-	
+	bool		thru;
 	
 private:
 	

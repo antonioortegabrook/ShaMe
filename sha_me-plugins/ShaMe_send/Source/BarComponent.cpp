@@ -26,7 +26,7 @@ BarComponent::BarComponent()
 	nameLabel.setColour(Label::textColourId, Colour(0xffDDDDDD));
 	
 	addAndMakeVisible(nameField);
-	//	nameField.setEscapeAndReturnKeysConsumed(false);
+//	nameField.setEscapeAndReturnKeysConsumed(false);
 	nameField.setFont(Font("Helvetica", 12, Font::plain));
 	nameField.setColour(TextEditor::textColourId, Colour(0xff4A4A4A));
 	
@@ -43,6 +43,15 @@ BarComponent::BarComponent()
         forceUnlinkButton.setColour(TextButton::textColourOnId, Colour(0xff4A4A4A));
         forceUnlinkButton.setColour(TextButton::textColourOffId, Colour(0xff4A4A4A));
 */
+	
+	addAndMakeVisible(thruButton);
+	
+	addAndMakeVisible(thruLabel);
+	thruLabel.setFont(Font("Helvetica", 12, Font::plain));
+	thruLabel.setJustificationType(Justification::centredRight);
+	thruLabel.setText("Thru", NotificationType::dontSendNotification);
+	thruLabel.setColour(Label::textColourId, Colour(0xffDDDDDD));
+	
 	
 	addAndMakeVisible(refreshButton);
 	refreshButton.setButtonText("Refresh");
@@ -86,6 +95,10 @@ void BarComponent::resized()
 	nameLabel.setBounds(area.removeFromLeft(48).translated(0, 1));
 	nameField.setBounds(area.removeFromLeft(175));
 	led.setBounds(area.removeFromLeft(area.getHeight()).reduced(0).translated(6, 0));
+
 //	forceUnlinkButton.setBounds(area.removeFromRight(56).translated(-5, 0));
-	refreshButton.setBounds(area.removeFromRight(56).translated(-9, 0));
+//	refreshButton.setBounds(area.removeFromRight(56).translated(-9, 0));
+	refreshButton.setBounds(area.removeFromRight(56).translated(-5, 0));
+	thruButton.setBounds(area.removeFromRight(area.getHeight() + 2).reduced(1).translated(-9, 0));
+	thruLabel.setBounds(area.removeFromRight(48).translated(-5, 1));
 }

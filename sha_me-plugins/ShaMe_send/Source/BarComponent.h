@@ -16,6 +16,7 @@
 #include "LedComponent.h"
 #include "ShaMeLookAndFeel.h"
 
+
 //==============================================================================
 /*
 */
@@ -32,11 +33,12 @@ public:
 	LedComponent	led;
 	TextButton	forceUnlinkButton;
 	TextButton	refreshButton;
+	ToggleButton    thruButton;
 	
 private:
 	ShaMeLookAndFeel	shameLookAndFeel;
 	Label			nameLabel;
-	
+	Label			thruLabel;
 	
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BarComponent)

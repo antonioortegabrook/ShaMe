@@ -31,6 +31,7 @@ ShaMe_sendAudioProcessor::ShaMe_sendAudioProcessor()
 //        ShaMe_sendAudioProcessor::setProcessingPrecision(ProcessingPrecision::doublePrecision);
 	isWritable = false;
 	binStatus = S_UNINITIALIZED;
+	thru = false;
 }
 
 ShaMe_sendAudioProcessor::~ShaMe_sendAudioProcessor()
@@ -188,7 +189,6 @@ void ShaMe_sendAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
 				
 				*sample_ptr++ = static_cast<double>(*channelData++);
 			}
-//		buffer.clear (channel, 0, buffer.getNumSamples());
 		}
 		
 		int tmp_offset = shame_write->read_offset;
@@ -196,6 +196,9 @@ void ShaMe_sendAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
 		shame_write->read_offset = shame_write->write_offset;
 		shame_write->write_offset = tmp_offset;
 	}
+	
+	if (!thru)
+		buffer.clear();
 }
 
 //==============================================================================
@@ -215,7 +218,15 @@ void ShaMe_sendAudioProcessor::getStateInformation (MemoryBlock& destData)
 	// You should use this method to store your parameters in the memory block.
 	// You could do that either as raw data, or use the XML or ValueTree classes
 	// as intermediaries to make it easy to save and load complex data.
-	MemoryOutputStream(destData, false).writeString(shameName);
+//	MemoryOutputStream(destData, false).writeString(shameName);
+//	MemoryOutputStream(destData, true).writeBool(thru);
+	
+	ScopedPointer<XmlElement> xml (new XmlElement ("ShaMe-send"));
+	
+	xml->setText(shameName);
+	xml->setAttribute ("thru", (bool) thru);
+	
+	copyXmlToBinary (*xml, destData);
 }
 
 void ShaMe_sendAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
@@ -224,6 +235,7 @@ void ShaMe_sendAudioProcessor::setStateInformation (const void* data, int sizeIn
 	// whose contents will have been created by the getStateInformation() call.
 	
 	shameName.operator=(MemoryInputStream(data, static_cast<size_t>(sizeInBytes), false).readString());
+	thru = *(char *)data + sizeInBytes - sizeof(bool);
 	
 	if (getSampleRate() && getBlockSize() && getTotalNumInputChannels()) {
 		
@@ -267,7 +279,7 @@ void ShaMe_sendAudioProcessor::createShaMe(juce::String name)
 	if (binStatus > S_UNINITIALIZED) {
 		
 		// do nothing if it's initialized
-		//		if (!name.compare(shameName) && binStatus > S_CANT_READ) {
+//		if (!name.compare(shameName) && binStatus > S_CANT_READ) {
 		if (!name.compare(shameName) && binStatus > S_CANT_WRITE) {
 			binStatus = get_writer_status(shame_write, writerN);
 			return;

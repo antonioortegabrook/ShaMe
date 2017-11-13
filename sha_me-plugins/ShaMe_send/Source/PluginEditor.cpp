@@ -28,6 +28,9 @@ ShaMe_sendAudioProcessorEditor::ShaMe_sendAudioProcessorEditor (ShaMe_sendAudioP
 	bar.nameField.addListener(this);
 	bar.refreshButton.addListener(this);
 	bar.forceUnlinkButton.addListener(this);
+	bar.thruButton.addListener(this);
+	
+	bar.thruButton.setToggleState(processor.thru, dontSendNotification);
 	
         addAndMakeVisible(console);
 	
@@ -135,6 +138,10 @@ void ShaMe_sendAudioProcessorEditor::buttonClicked (Button* button)
 		postShameErrorMessage(processor.initResult);
 
 		postStatus();
+	}
+	
+	else if (button == &bar.thruButton) {
+		processor.thru = bar.thruButton.getToggleState();
 	}
 	
 	else if (button == &bar.forceUnlinkButton) {
