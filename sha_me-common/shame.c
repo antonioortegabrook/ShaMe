@@ -346,9 +346,35 @@ int writers_attached(struct shame *shared_mem)
 {
 	int writers;
 	
-	/** Acá es donde deberíamos checkear que efectivamente estén activos
+	int fd_lock;
+	int lock_rc;
+	char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
+	
+	int count = 0;
+	int idx = 0;
+	
+	pid_t our_pid = getpid();
+	
+	/** Update active writers
 	 */
-	update_active_connections(shared_mem, false);
+	while (count < shared_mem->attached_writers) {
+		
+		if (shared_mem->writer_pid[idx] && shared_mem->writer_pid[idx] != our_pid) {
+			sprintf(fl_name, "/tmp/shame%d", shared_mem->writer_pid[idx]);
+			
+			fd_lock = open(fl_name, O_RDWR, 0666);
+			lock_rc = lockf(fd_lock, F_TEST, 0);
+			
+			if (!lock_rc) {	// success means file is not locked (process has crashed)
+				shared_mem->writer_pid[idx] = 0;
+				shared_mem->attached_writers -= 1;
+			}
+			
+			count++;
+		}
+		idx++;
+	}
+	
 	
 	writers = shared_mem->attached_writers;
 	
@@ -363,9 +389,35 @@ int readers_attached(struct shame *shared_mem)
 {
 	int readers;
 	
-	/** Acá es donde deberíamos checkear que efectivamente estén activos
+	int fd_lock;
+	int lock_rc;
+	char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
+	
+	int count = 0;
+	int idx = 0;
+	
+	pid_t our_pid = getpid();
+	
+	/** Update active readers
 	 */
-	update_active_connections(shared_mem, true);
+	while (count < shared_mem->attached_readers) {
+		
+		if (shared_mem->reader_pid[idx] && shared_mem->reader_pid[idx] != our_pid) {
+			sprintf(fl_name, "/tmp/shame%d", shared_mem->reader_pid[idx]);
+			
+			fd_lock = open(fl_name, O_RDWR, 0666);
+			lock_rc = lockf(fd_lock, F_TEST, 0);
+			
+			if (!lock_rc) {	// success means file is not locked (process has crashed)
+				shared_mem->reader_pid[idx] = 0;
+				shared_mem->attached_readers -= 1;
+			}
+			
+			count++;
+		}
+		idx++;
+	}
+	
 	
 	readers = shared_mem->attached_readers;
 	
