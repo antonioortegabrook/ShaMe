@@ -88,6 +88,12 @@ void ShaMe_sendAudioProcessorEditor::textEditorReturnKeyPressed (TextEditor& tex
 			bar.nameField.unfocusAllComponents();
 			return;
 		}
+		
+		if (!name.compare(String("shame.unlink"))) {
+			buttonClicked(&bar.forceUnlinkButton);
+			bar.nameField.unfocusAllComponents();
+			return;
+		}
 			
 		bar.nameField.unfocusAllComponents();
 		
@@ -137,7 +143,7 @@ void ShaMe_sendAudioProcessorEditor::buttonClicked (Button* button)
 		 Mejorar esto: force_unlink debería devolver algún valor y acá deberíamos mostrar
 		 un resultado verdaro
 		 */
-		bar.nameField.clear();
+		bar.nameField.setText(String());
 		console.postMessage("Unlinked " + processor.getName());
 		ledStatus = LED_NEUTRAL;
 		bar.led.setState(ledStatus);

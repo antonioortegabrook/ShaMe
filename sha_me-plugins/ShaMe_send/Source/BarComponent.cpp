@@ -36,12 +36,13 @@ BarComponent::BarComponent()
 	
 	addAndMakeVisible(led);
         led.setState(LED_NEUTRAL);
-	
+
+/*
 	addAndMakeVisible(forceUnlinkButton);
 	forceUnlinkButton.setButtonText("Unlink");
         forceUnlinkButton.setColour(TextButton::textColourOnId, Colour(0xff4A4A4A));
         forceUnlinkButton.setColour(TextButton::textColourOffId, Colour(0xff4A4A4A));
-	
+*/
 	
 	addAndMakeVisible(refreshButton);
 	refreshButton.setButtonText("Refresh");
@@ -63,6 +64,7 @@ void BarComponent::paint (Graphics& g)
 	 drawing code..
 	 */
 //        Rectangle<float> nameFieldArea(getLocalBounds().removeFromLeft(175).translated(48, 0).toFloat().withTrimmedTop(0.5).withTrimmedBottom(3.5));
+	
 	Rectangle<float> nameFieldArea(getLocalBounds().removeFromLeft(175).translated(48, 0).toFloat());
 	
 	g.setColour(Colour(0xffD8D8D8));
@@ -84,6 +86,6 @@ void BarComponent::resized()
 	nameLabel.setBounds(area.removeFromLeft(48).translated(0, 1));
 	nameField.setBounds(area.removeFromLeft(175));
 	led.setBounds(area.removeFromLeft(area.getHeight()).reduced(0).translated(6, 0));
-	forceUnlinkButton.setBounds(area.removeFromRight(56).translated(-5, 0));
+//	forceUnlinkButton.setBounds(area.removeFromRight(56).translated(-5, 0));
 	refreshButton.setBounds(area.removeFromRight(56).translated(-9, 0));
 }
