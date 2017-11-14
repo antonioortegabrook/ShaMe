@@ -218,13 +218,11 @@ void ShaMe_sendAudioProcessor::getStateInformation (MemoryBlock& destData)
 	// You should use this method to store your parameters in the memory block.
 	// You could do that either as raw data, or use the XML or ValueTree classes
 	// as intermediaries to make it easy to save and load complex data.
-//	MemoryOutputStream(destData, false).writeString(shameName);
-//	MemoryOutputStream(destData, true).writeBool(thru);
 	
 	ScopedPointer<XmlElement> xml (new XmlElement ("ShaMe-send"));
 	
-	xml->setText(shameName);
-	xml->setAttribute ("thru", (bool) thru);
+	xml->setAttribute("name", shameName);
+	xml->setAttribute("thru", (bool)thru);
 	
 	copyXmlToBinary (*xml, destData);
 }
@@ -234,8 +232,13 @@ void ShaMe_sendAudioProcessor::setStateInformation (const void* data, int sizeIn
 	// You should use this method to restore your parameters from this memory block,
 	// whose contents will have been created by the getStateInformation() call.
 	
-	shameName.operator=(MemoryInputStream(data, static_cast<size_t>(sizeInBytes), false).readString());
-	thru = *(char *)data + sizeInBytes - sizeof(bool);
+	ScopedPointer<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+	if (xmlState != nullptr) {
+		if (xmlState->hasTagName ("ShaMe-send")) {
+			shameName.operator=(xmlState->getStringAttribute("name"));
+			thru = xmlState->getBoolAttribute ("thru", false);
+		}
+	}
 	
 	if (getSampleRate() && getBlockSize() && getTotalNumInputChannels()) {
 		
