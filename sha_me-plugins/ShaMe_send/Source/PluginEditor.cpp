@@ -208,8 +208,8 @@ void ShaMe_sendAudioProcessorEditor::postStatus()
 		int dontMatchSR = processor.shame_write->attached_readers - processor.readersMatchSampleRate();
 		int dontMatchVS = processor.shame_write->attached_readers - processor.readersMatchVectorSize();
 		
-		console.post(String::formatted("%d writers connected", attachedW));
-		console.post(String::formatted("%d readers connected", attachedR));
+		console.post(String::formatted("%d writer%s connected", attachedW, attachedW == 1 ? "" : "s"));
+		console.post(String::formatted("%d reader%s connected", attachedR, attachedR == 1 ? "" : "s"));
 		
 		if (processor.binStatus < S_ALL_READERS_CAN_READ) {
 			

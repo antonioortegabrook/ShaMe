@@ -157,81 +157,81 @@ label_return:
  */
 int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number, int sample_rate, int vector_size)
 {
-	int fd_lock;
-	int lock_rc;
-	char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
-	
-	int reader_i;
-	int fd_shm;
-	struct shame *tmp_shared_mem;
-	pid_t our_pid = getpid();
-	
-	size_t map_size;
-	
-	char formatted_name[256];
-	
-	
-	// Set a file-lock to let other processes know if we are active or not
-	sprintf(fl_name, "/tmp/shame%d", our_pid);
-	
-	fd_lock = open(fl_name, O_CREAT | O_RDWR, 0666);
-	lock_rc = lockf(fd_lock, F_TLOCK, 0);
-	
-	
-	
-	// Get shared memory
-	sprintf(formatted_name, "/%s", name);
-	
-	if ((fd_shm = shm_open(formatted_name, O_RDWR, 0660)) == -1)
-		return E_SHAME_DOESNT_EXIST;	// File doesn't exist
-	
-	// Successfully opened, map once to find full size
-	tmp_shared_mem = (struct shame *)mmap(NULL, sizeof(struct shame), PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
-	
-	if (tmp_shared_mem == MAP_FAILED)
-		return E_SHAME_MAP_FAILED;	// First map failed
-	
-	
-	
-	// Successfully mapped
-	// Find the first empty position in PIDs array; this will be our instance index
-	reader_i = 0;
-	while (tmp_shared_mem->reader_pid[reader_i] != EMPTY)
-		reader_i++;
-	
-	// now reader_i == first empty position
-	
-	
-	// Remap
-	// Get total size
-	map_size = tmp_shared_mem->map_size;
-	
-	// Unmap...
-	if (munmap(tmp_shared_mem, sizeof(struct shame)) == -1)
-		return E_SHAME_REMAP_FAILED_UNMAP;	// Unmap failed
-	
-	// ...and remap
-	tmp_shared_mem = (struct shame *)mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
-	
-	if (tmp_shared_mem == MAP_FAILED)
-		return E_SHAME_REMAP_FAILED_MAP;	// Remap failed
-	
-	
-	
-	
-	// Fill
-	tmp_shared_mem->reader_sample_rate[reader_i]	= sample_rate;
-	tmp_shared_mem->reader_vector_size[reader_i]	= vector_size;
-	tmp_shared_mem->reader_pid[reader_i]		= our_pid;
-	
-	tmp_shared_mem->attached_readers += 1;
-	
-	
-	// Return
-	*shared_mem = tmp_shared_mem;
-	*reader_number = reader_i;
-	
-	return E_SHAME_INIT_READER_SUCCESS;
+    int fd_lock;
+    int lock_rc;
+    char fl_name[26];	// mejorar usando unsigned int pidLength = sizeof(pid_t);
+    
+    int reader_i;
+    int fd_shm;
+    struct shame *tmp_shared_mem;
+    pid_t our_pid = getpid();
+    
+    size_t map_size;
+    
+    char formatted_name[256];
+    
+    
+    // Set a file-lock to let other processes know if we are active or not
+    sprintf(fl_name, "/tmp/shame%d", our_pid);
+    
+    fd_lock = open(fl_name, O_CREAT | O_RDWR, 0666);
+    lock_rc = lockf(fd_lock, F_TLOCK, 0);
+    
+    
+    
+    // Get shared memory
+    sprintf(formatted_name, "/%s", name);
+    
+    if ((fd_shm = shm_open(formatted_name, O_RDWR, 0660)) == -1)
+        return E_SHAME_DOESNT_EXIST;	// File doesn't exist
+    
+    // Successfully opened, map once to find full size
+    tmp_shared_mem = (struct shame *)mmap(NULL, sizeof(struct shame), PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
+    
+    if (tmp_shared_mem == MAP_FAILED)
+        return E_SHAME_MAP_FAILED;	// First map failed
+    
+    
+    
+    // Successfully mapped
+    // Find the first empty position in PIDs array; this will be our instance index
+    reader_i = 0;
+    while (tmp_shared_mem->reader_pid[reader_i] != EMPTY)
+        reader_i++;
+    
+    // now reader_i == first empty position
+    
+    
+    // Remap
+    // Get total size
+    map_size = tmp_shared_mem->map_size;
+    
+    // Unmap...
+    if (munmap(tmp_shared_mem, sizeof(struct shame)) == -1)
+        return E_SHAME_REMAP_FAILED_UNMAP;	// Unmap failed
+    
+    // ...and remap
+    tmp_shared_mem = (struct shame *)mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm, 0);
+    
+    if (tmp_shared_mem == MAP_FAILED)
+        return E_SHAME_REMAP_FAILED_MAP;	// Remap failed
+    
+    
+    
+    
+    // Fill
+    tmp_shared_mem->reader_sample_rate[reader_i]	= sample_rate;
+    tmp_shared_mem->reader_vector_size[reader_i]	= vector_size;
+    tmp_shared_mem->reader_pid[reader_i]		= our_pid;
+    
+    tmp_shared_mem->attached_readers += 1;
+    
+    
+    // Return
+    *shared_mem = tmp_shared_mem;
+    *reader_number = reader_i;
+    
+    return E_SHAME_INIT_READER_SUCCESS;
 }
 
 
