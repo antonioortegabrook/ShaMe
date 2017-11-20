@@ -88,6 +88,15 @@ typedef enum {
 	
 } t_shame_error;
 
+/** Info about a connected reader or writer
+ */
+struct Cinfo {
+	int	is_active;
+	pid_t	pid;
+	double	sample_rate;
+	int	vector_size;
+};
+
 /** The Shared Memory struct
 	* Server-side init:
 		1 - Open the file.
@@ -122,6 +131,11 @@ struct shame {
 	 */
 	int	attached_readers;
 	int	attached_writers;
+	
+	/** Readers and writers info
+	 */
+	struct Cinfo reader_info[MAX_READERS];
+	struct Cinfo writer_info[MAX_WRITERS];
 	
 	/** Readers and writers PIDs
 	 */
@@ -217,6 +231,7 @@ int get_writer_status(struct shame *shared_mem, int writer_id);
 /** Update active readers / writers
  */
 void update_active_connections(struct shame *shared_mem, int is_reader);
+void update_connections_info(struct shame *shared_mem, int is_reader);
 
 
 #endif /* shame_h */
