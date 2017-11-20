@@ -101,11 +101,6 @@ t_shame_error init_shame_writer(struct shame **shared_mem, char name[], int *wri
         
 //init:
 	sprintf(tmp_shared_mem->name, "%s", name);
-
-        for (int i = 0; i < MAX_READERS; i++) {		//
-                tmp_shared_mem->reader_pid[i] = 0;	// BORRAR
-                tmp_shared_mem->writer_pid[i] = 0;	//
-        }						//
 	
 	for (int i = 0; i < MAX_READERS; i++)
 		tmp_shared_mem->reader_info[i].is_active = false;
@@ -134,14 +129,8 @@ exit:
 
 	// Find the first empty position in PIDs array; this will be our instance index
 	writer_i = 0;
-	while (tmp_shared_mem->writer_pid[writer_i] != EMPTY)	//
-		writer_i++;					// BORRAR
-	// (now writer_i = first empty position)
-	
-	writer_i = 0;
 	while (tmp_shared_mem->writer_info[writer_i].is_active)
 		writer_i++;
-	// (now writer_i == first empty position)
 	
 	tmp_shared_mem->writer_info[writer_i].pid	  = getpid();
 	tmp_shared_mem->writer_info[writer_i].sample_rate = sample_rate;
@@ -149,7 +138,6 @@ exit:
 	tmp_shared_mem->writer_info[writer_i].is_active   = true;
 	
 	
-	tmp_shared_mem->writer_pid[writer_i] = getpid();	// BORRAR
         
         if (!tmp_shared_mem->attached_writers)
                 tmp_shared_mem->owner_id = writer_i;
@@ -214,15 +202,9 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
 	// Successfully mapped
 	// Find the first empty position in PIDs array; this will be our instance index
 	reader_i = 0;
-	while (tmp_shared_mem->reader_pid[reader_i] != EMPTY)	//
-		reader_i++;					// BORRAR
-	
-	// now reader_i == first empty position
-	
 	while (tmp_shared_mem->reader_info[reader_i].is_active)
 		reader_i++;
-	// now reader_i == first empty position
-	
+
 	// Remap
 	// Get total size
 	map_size = tmp_shared_mem->map_size;
@@ -241,10 +223,6 @@ int init_shame_reader(struct shame **shared_mem, char name[], int *reader_number
 	
 	
 	// Fill
-	tmp_shared_mem->reader_sample_rate[reader_i]	= sample_rate;	//
-	tmp_shared_mem->reader_vector_size[reader_i]	= vector_size;	// BORRAR
-	tmp_shared_mem->reader_pid[reader_i]		= our_pid;	//
-	
 	tmp_shared_mem->reader_info[reader_i].pid		= our_pid;
 	tmp_shared_mem->reader_info[reader_i].sample_rate	= sample_rate;
 	tmp_shared_mem->reader_info[reader_i].vector_size	= vector_size;
@@ -288,19 +266,6 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 	instance_i = aux_i = pid_count = 0;
 	
 	if (is_reader) {
-//---------- BORRAR --------
-		while (instance_i < tmp_shared_mem->attached_readers) {
-			
-			if (tmp_shared_mem->reader_pid[aux_i]) {
-				
-				if (tmp_shared_mem->reader_pid[aux_i] == (tmp_shared_mem->reader_pid[instance_number]))
-					pid_count++;
-				
-				instance_i++;
-			}
-			aux_i++;
-		}
-//--------------------------
 		while (instance_i < tmp_shared_mem->attached_readers) {
 			
 			if (tmp_shared_mem->reader_info[aux_i].is_active) {
@@ -315,26 +280,13 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 		}
 		
 		should_unmap = (pid_count <= 1);
-		tmp_shared_mem->reader_pid[instance_number] = 0; // BORRAR
 		tmp_shared_mem->reader_info[instance_number].is_active = false;
 		tmp_shared_mem->attached_readers -= 1;
 		
 	} else { // (is writer)
 		if (instance_number == tmp_shared_mem->owner_id) // <- set all samples to 0
 			memset(&tmp_shared_mem->sample_data, 0, tmp_shared_mem->sample_data_size);
-//------- BORRAR --------
-		while (instance_i < tmp_shared_mem->attached_writers) {
-			
-			if (tmp_shared_mem->writer_pid[aux_i]) {
-				
-				if (tmp_shared_mem->writer_pid[aux_i] == (tmp_shared_mem->writer_pid[instance_number]))
-					pid_count++;
-				
-				instance_i++;
-			}
-			aux_i++;
-		}
-//-----------------------
+
 		while (instance_i < tmp_shared_mem->attached_writers) {
 			
 			if (tmp_shared_mem->writer_info[aux_i].is_active) {
@@ -349,7 +301,6 @@ int dettach_shame(struct shame *shared_mem, char name[], int instance_number, in
 		}
 		
 		should_unmap = (pid_count <= 1);
-		tmp_shared_mem->writer_pid[instance_number] = 0; // BORRAR
 		tmp_shared_mem->writer_info[instance_number].is_active = false;
 		tmp_shared_mem->attached_writers -= 1;
 	}
@@ -411,25 +362,6 @@ int writers_attached(struct shame *shared_mem)
 	
 	/** Update active writers
 	 */
-//------------BORRAR------------
-	while (count < shared_mem->attached_writers) {
-		
-		if (shared_mem->writer_pid[idx] && shared_mem->writer_pid[idx] != our_pid) {
-			sprintf(fl_name, "/tmp/shame%d", shared_mem->writer_pid[idx]);
-			
-			fd_lock = open(fl_name, O_RDWR, 0666);
-			lock_rc = lockf(fd_lock, F_TEST, 0);
-			
-			if (!lock_rc) {	// success means file is not locked (process has crashed)
-				shared_mem->writer_pid[idx] = 0;
-				shared_mem->attached_writers -= 1;
-			}
-			
-			count++;
-		}
-		idx++;
-	}
-//------------------------------
 	while (count < shared_mem->attached_writers) {
 		
 		if (shared_mem->writer_info[idx].is_active && shared_mem->writer_info[idx].pid != our_pid) {
@@ -472,25 +404,6 @@ int readers_attached(struct shame *shared_mem)
 	
 	/** Update active readers
 	 */
-//---------BORRAR---------
-	while (count < shared_mem->attached_readers) {
-		
-		if (shared_mem->reader_pid[idx] && shared_mem->reader_pid[idx] != our_pid) {
-			sprintf(fl_name, "/tmp/shame%d", shared_mem->reader_pid[idx]);
-			
-			fd_lock = open(fl_name, O_RDWR, 0666);
-			lock_rc = lockf(fd_lock, F_TEST, 0);
-			
-			if (!lock_rc) {	// success means file is not locked (process has crashed)
-				shared_mem->reader_pid[idx] = 0;
-				shared_mem->attached_readers -= 1;
-			}
-			
-			count++;
-		}
-		idx++;
-	}
-//------------------------
 	while (count < shared_mem->attached_readers) {
 		
 		if (shared_mem->reader_info[idx].is_active && shared_mem->reader_info[idx].pid != our_pid) {
@@ -527,16 +440,7 @@ int clients_match_sample_rate(struct shame *shared_mem)
 	
 	reader_count = 0;
 	reader_n = 0;
-//------BORRAR-----
-	while (reader_count < attached_readers) {
-		if (shared_mem->reader_pid[reader_n]) {
-			if (sample_rate == shared_mem->reader_sample_rate[reader_n])
-				match++;
-			reader_count++;
-		}
-		reader_n++;
-	}
-//-----------------
+
 	while (reader_count < attached_readers) {
 		if (shared_mem->reader_info[reader_n].is_active) {
 			if (sample_rate == shared_mem->reader_info[reader_n].sample_rate)
@@ -562,16 +466,7 @@ int clients_match_vector_size(struct shame *shared_mem)
 	
 	reader_count = 0;
 	reader_n = 0;
-//--------BORRAR-------
-	while (reader_count < attached_readers) {
-		if (shared_mem->reader_pid[reader_n]) {
-			if (vector_size == shared_mem->reader_vector_size[reader_n])
-				match++;
-			reader_count++;
-		}
-		reader_n++;
-	}
-//---------------------
+
 	while (reader_count < attached_readers) {
 		if (shared_mem->reader_info[reader_n].is_active) {
 			if (vector_size == shared_mem->reader_info[reader_n].vector_size)
@@ -627,6 +522,31 @@ int get_writer_status(struct shame *shared_mem, int writer_id)
 	return bin_status;
 }
 
+void set_reader_info(struct shame *shared_mem, int reader_id, double sample_rate, int vector_size)
+{
+	shared_mem->reader_info[reader_id].sample_rate = sample_rate;
+	shared_mem->reader_info[reader_id].vector_size = vector_size;
+}
+
+void set_writer_info(struct shame *shared_mem, int writer_id, double sample_rate, int vector_size)
+{
+	shared_mem->writer_info[writer_id].sample_rate = sample_rate;
+	shared_mem->writer_info[writer_id].vector_size = vector_size;
+}
+
+/** Report if a specific reader match shame's sample rate
+ */
+int reader_i_match_sample_rate(struct shame *shared_mem, int reader_i)
+{
+	return (shared_mem->sample_rate == shared_mem->reader_info[reader_i].sample_rate);
+}
+
+/** Report if a specific reader match shame's vector size
+ */
+int reader_i_match_vector_size(struct shame *shared_mem, int reader_i)
+{
+	return (shared_mem->vector_size == shared_mem->reader_info[reader_i].vector_size);
+}
 
 /** Update active readers / writers
  */

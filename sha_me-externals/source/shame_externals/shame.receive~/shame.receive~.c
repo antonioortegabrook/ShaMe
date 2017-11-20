@@ -41,6 +41,7 @@ void shame_receive_tilde_perform64_no_out(t_shame_receive_tilde *x, t_object *ds
 
 void shame_receive_tilde_refresh(t_shame_receive_tilde *x);
 void set_readable(t_shame_receive_tilde *x, int be_verbose);
+void o_set_readable(t_shame_receive_tilde *x, int be_verbose);
 
 //attr accessors
 t_max_err shame_receive_tilde_name_get(t_shame_receive_tilde *x, void *attr, long *ac, t_atom **av);
@@ -323,7 +324,7 @@ void shame_receive_tilde_refresh(t_shame_receive_tilde *x)
 
 
 
-void set_readable(t_shame_receive_tilde *x, int be_verbose)
+void o_set_readable(t_shame_receive_tilde *x, int be_verbose)
 {
     int previous_state = x->shame_readable;
     
@@ -358,4 +359,39 @@ void set_readable(t_shame_receive_tilde *x, int be_verbose)
     
     if (x->shame_readable && (!previous_state || be_verbose))
 	object_post((t_object *)x, "%s is readable", x->name.s_name);
+}
+
+
+void set_readable(t_shame_receive_tilde *x, int be_verbose)
+{
+	int previous_state = x->shame_readable;
+	
+	double	our_sample_rate = sys_getsr();
+	int	our_vector_size = sys_getblksize();
+	int match_sample_rate;
+	int match_vector_size;
+	
+	set_reader_info(x->shame_read, x->reader_n, our_sample_rate, our_vector_size);
+	
+	match_sample_rate = reader_i_match_sample_rate(x->shame_read, x->reader_n);
+	match_vector_size = reader_i_match_vector_size(x->shame_read, x->reader_n);
+	
+	if (!match_sample_rate) {
+		
+		if (match_sample_rate != previous_state || be_verbose)
+			object_warn((t_object *)x, "%s doesn't match sample rate", x->name.s_name);
+		
+	}
+	
+	if (!match_vector_size) {
+		
+		if (match_vector_size != previous_state || be_verbose)
+			object_warn((t_object *)x, "%s doesn't match vector size", x->name.s_name);
+		
+	}
+	
+	x->shame_readable = (match_sample_rate && match_vector_size);
+	
+	if (x->shame_readable && (!previous_state || be_verbose))
+		object_post((t_object *)x, "%s is readable", x->name.s_name);
 }

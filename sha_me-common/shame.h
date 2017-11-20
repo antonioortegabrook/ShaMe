@@ -222,6 +222,13 @@ int clients_match_sample_rate(struct shame *shared_mem);
  */
 int clients_match_vector_size(struct shame *shared_mem);
 
+/** Report if a specific reader match shame's sample rate
+ */
+int reader_i_match_sample_rate(struct shame *shared_mem, int reader_i);
+
+/** Report if a specific reader match shame's vector size
+ */
+int reader_i_match_vector_size(struct shame *shared_mem, int reader_i);
 
 /** Get writer's binary status.
  */
@@ -230,8 +237,11 @@ int get_writer_status(struct shame *shared_mem, int writer_id);
 
 /** Update active readers / writers
  */
-void update_active_connections(struct shame *shared_mem, int is_reader);
-void update_connections_info(struct shame *shared_mem, int is_reader);
+void update_active_connections(struct shame *shared_mem, int is_reader); //
+void update_connections_info(struct shame *shared_mem, int is_reader);   // BORRAR
 
+void set_reader_info(struct shame *shared_mem, int reader_id, double sample_rate, int vector_size);
+
+void set_writer_info(struct shame *shared_mem, int writer_id, double sample_rate, int vector_size);
 
 #endif /* shame_h */
