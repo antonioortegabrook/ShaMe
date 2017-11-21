@@ -90,7 +90,7 @@ typedef enum {
 
 /** Info about a connected reader or writer
  */
-struct Cinfo {
+struct RWinfo {
 	int	is_active;
 	pid_t	pid;
 	double	sample_rate;
@@ -98,77 +98,30 @@ struct Cinfo {
 };
 
 /** The Shared Memory struct
-	* Server-side init:
-		1 - Open the file.
-		2 - If we are creating it, ftruncate() to sizeof(struct shame).
-		3 - mmap() with size = sizeof(struct shame).
-		4 - Fill the server_* fields and find out sample_data_size.
-		5 - mmap() again with size sizeof(struct shame) + sample_data_size.
 */
 struct shame {
 	char	name[256];
 	
-	/** Sample_data is allocated from these, because they belong to the
-	 writer process.
-	 */
 	double	sample_rate;
 	int	vector_size;
 	long	nchannels;
 	
-	/** We use these to know when should we unlink, etc. they might also be
-	 useful to display some connection information
-	 */
+	int	owner_id;		/* The writer who can write to this shame	*/
 	
-	/** Was created by a reader? (bool) (not in use)
-	 */
-	int	created_by_reader;
-	
-	/** The ID of the writer that can write to this shame
-	 */
-	int	owner_id;
-	
-	/** How many readers and writers are attached?
-	 */
 	int	attached_readers;
 	int	attached_writers;
 	
-	/** Readers and writers info
-	 */
-	struct Cinfo reader_info[MAX_READERS];
-	struct Cinfo writer_info[MAX_WRITERS];
+	struct RWinfo reader_info[MAX_READERS];
+	struct RWinfo writer_info[MAX_WRITERS];
 	
-	/** Readers and writers PIDs
-	 */
-	pid_t	reader_pid[MAX_READERS];
-	pid_t	writer_pid[MAX_WRITERS];
-	
-	/** readers' sample rates and buffer sizes; these are only for dysplay
-	 information on the writer-side; readers cannot modify attributes of
-	 sample_data and they are responsible for not reading anything they
-	 can not read.
-	 */
-	int	reader_sample_rate[MAX_READERS];
-	int	reader_vector_size[MAX_READERS];
-	
-	
-	/** This is the size (in bytes) of the block we write the samples to.
-	 It is equal to:
-	 server_vector_size * server_nchannels * sizeof(double) - sizeof(double)
-	 */
-	size_t	sample_data_size;
+	size_t	sample_data_size;	/* 2 * sizeof(double) * vector_size * nchannels	*/
 	size_t	total_number_of_samples;
 	size_t	map_size;
 	
-	/** The offset for reading/writing.
-	 When it's equal to 0 for reading, it's equal to vector_size for writing,
-	 and viceversa.
-	 */
-	int     read_offset;
-	int     write_offset;
+	int     read_offset;		/* If read_offset == 0 then			*/
+	int     write_offset;		/* write_offset == vector_size and viceversa	*/
 	
-	/** The pointer to the sample data
-	 */
-	double	sample_data;
+	double	sample_data;		/* Sample array					*/
 };
 
 
