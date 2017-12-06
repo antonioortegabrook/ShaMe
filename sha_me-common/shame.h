@@ -11,6 +11,10 @@
 #ifndef shame_h
 #define shame_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -196,5 +200,10 @@ void update_connections_info(struct shame *shared_mem, int is_reader);   // BORR
 void set_reader_info(struct shame *shared_mem, int reader_id, double sample_rate, int vector_size);
 
 void set_writer_info(struct shame *shared_mem, int writer_id, double sample_rate, int vector_size);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* shame_h */
